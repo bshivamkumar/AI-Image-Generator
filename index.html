@@ -101,10 +101,15 @@
     <div class="team-info">
         <p><strong>Team:</strong> Shouhan Wang, Bhardwaj Shivam, Jingong Chen</p>
         <p><strong>Project:</strong> AI-Powered Image Generation Model (Text to Image)</p>
+		<p><strong>Repositories Link:</strong><a href="https://github.com/bshivamkumar/AI-Image-Generator" class="text-indigo-600 hover:text-indigo-800 underline" target="_blank">https://github.com/bshivamkumar/AI-Image-Generator</a></p>
+		<p><strong>Pages Link:</strong><a href="hhttps://bshivamkumar.github.io/AI-Image-Generator/" class="text-indigo-600 hover:text-indigo-800 underline" target="_blank">https://bshivamkumar.github.io/AI-Image-Generator/</a></p>
     </div>
     
     <hr class="mt-8 mb-6 border-gray-200">
-
+	
+	<!-- 1. Problem Definition -->
+    <h2 class="text-2xl">Executive Summary </h2>
+    <p>This project delivers a lightweight, high-performance Text-to-Image Generation platform, strategically designed to lower the barrier to entry for individual users and small businesses facing resource constraints. Our system's core innovation is the <strong>Four-Quadrant Generation Grid</strong> combined with a <strong>Targeted Feedback Loop</strong>, which enables the collection of precise, spatially-contextualized human preference data, moving the application beyond a simple tool into an active ML pipeline component. The immediate integration of Firestore for persistent, collaborative data storage confirms the viability of this Human-in-the-Loop (HiTL) strategy and ensures real-time model refinement capabilities.</p>
     <!-- 1. Problem Definition -->
     <h2 class="text-2xl">1. Problem Definition </h2>
     <p>The generative AI landscape is rapidly evolving, yet barriers to entry—chiefly <strong>high operational costs and massive computing resource requirements</strong>—prevent individual creators and small businesses from leveraging these tools fully. Current state-of-the-art models, while powerful, often demand specialized hardware or expensive API subscriptions, contributing to the rising labor costs associated with content creation. We observed a crucial gap: the need for a solution that democratizes high-quality visual content generation.</p>
@@ -263,7 +268,7 @@
     <h2 class="text-2xl">6. Reflection </h2>
 
     <h3>What Worked?</h3>
-    <p>Our team dynamics were a major success. By dividing the work into clear, isolated components (Frontend UX, ML Integration, and Data Pipeline Design), we achieved a fast development pace. The choice of <strong>React with Tailwind CSS</strong> for the frontend proved invaluable for quickly building a highly responsive and visually appealing interface. Critically, the pivot to leveraging a reliable third-party API for the MVP allowed us to deliver a fully functional, high-quality product that solved the <strong>user experience</strong> and <strong>data collection</strong> problem, even while the *model-training* piece was pending. The four-quadrant display and dedicated feedback loop were highly effective design decisions that garnered positive initial feedback.</p>
+    <p>Our team dynamics were a major success. By dividing the work into clear, isolated components (Frontend UX, ML Integration, and Data Pipeline Design), we achieved a fast development pace. The choice of <strong>Implement Data Persistence</strong> keeps the integration of Firestore elevates the system from a prototype to a fully realized Human-in-the-Loop (HiTL) data collection platform, immediately proving the viability of our core feedback strategy. This live, collaborative data store ensures that critical human preference signals are captured, persisted, and available for immediate analysis and future model fine-tuning. While the *model-training* piece was pending. The four-quadrant display and dedicated feedback loop were highly effective design decisions that garnered positive initial feedback.</p>
 
     <h3>What Didn’t Work? And What Would We Improve?</h3>
     <p>The biggest challenge was the time constraint on building and fine-tuning our original <strong>truly lightweight custom model</strong>. The shift to an SDXL-based MVP, while pragmatic, meant we didn't fully achieve the *resource-efficiency* goal in the first iteration.</p>
