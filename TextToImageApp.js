@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// ➡️ NEW FIREBASE IMPORTS
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, addDoc, query, onSnapshot } from 'firebase/firestore';
+
 
 // ⚠️ IMPORTANT: If token error comes then need to generate with new token
 // Go to settings > access token > create new token and paste that token below.
-const HF_ACCESS_TOKEN = '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';
+const HF_ACCESS_TOKEN = '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';
 
 // Use a publicly supported model for Text-to-Image inference.
 const MODEL_ID = 'stabilityai/stable-diffusion-xl-base-1.0';
@@ -100,6 +106,21 @@ body, #root {
     font-size: 15px;
     transition: background-color 0.2s;
 }
+
+/* Data Viewer Styles */
+.data-viewer-container {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+.feedback-item {
+    border: 1px solid #eee;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
 `;
 // --- END GLOBAL STYLES ---
 
@@ -134,17 +155,27 @@ function TextToImageApp() {
     const [currentQuadrant, setCurrentQuadrant] = useState(null);
     const [feedbackText, setFeedbackText] = useState('');
 
-    // ➡️ NEW: Metrics and History States
-    const [timeTaken, setTimeTaken] = useState(null); // Time for the last generation
-    const [resultMetrics, setResultMetrics] = useState(null); // Metrics for the last generation
-    const [history, setHistory] = useState([]); // Array to store all past results for plotting
-    const [showInfoModal, setShowInfoModal] = useState(false); // For alert replacement
+    // Metrics and History States
+    const [timeTaken, setTimeTaken] = useState(null); 
+    const [resultMetrics, setResultMetrics] = useState(null); 
+    const [history, setHistory] = useState([]); 
+    const [showInfoModal, setShowInfoModal] = useState(false); 
+
+    // ➡️ NEW: Firebase States
+    const [db, setDb] = useState(null);
+    const [auth, setAuth] = useState(null);
+    const [userId, setUserId] = useState(null);
+    const [isAuthReady, setIsAuthReady] = useState(false);
+    
+    // ➡️ NEW: Feedback Data State from Firestore
+    const [savedFeedback, setSavedFeedback] = useState([]);
+    const [showDataViewer, setShowDataViewer] = useState(false); 
 
     const primaryColor = '#6A5ACD'; 
     const accentColor = '#9370DB'; 
 
     // Inject global styles
-    React.useEffect(() => {
+    useEffect(() => {
         if (!document.getElementById('global-styles')) {
             const style = document.createElement('style');
             style.id = 'global-styles';
@@ -152,6 +183,91 @@ function TextToImageApp() {
             document.head.appendChild(style);
         }
     }, []);
+
+    // 1. FIREBASE INITIALIZATION AND AUTHENTICATION
+    useEffect(() => {
+        // Use provided global variables
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        if (!firebaseConfig) {
+            console.error("Firebase config is missing. Cannot initialize Firestore.");
+            return;
+        }
+
+        try {
+            const app = initializeApp(firebaseConfig, appId);
+            const authInstance = getAuth(app);
+            const dbInstance = getFirestore(app);
+
+            setDb(dbInstance);
+            setAuth(authInstance);
+
+            // Authentication listener
+            const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+                if (user) {
+                    setUserId(user.uid);
+                    console.log("Firebase Auth Ready. User ID:", user.uid);
+                }
+                setIsAuthReady(true);
+            });
+
+            // Initial sign-in attempt
+            const authenticate = async () => {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(authInstance, initialAuthToken);
+                        console.log("Signed in with custom token.");
+                    } else {
+                        // Fallback to anonymous sign-in
+                        await signInAnonymously(authInstance);
+                        console.log("Signed in anonymously.");
+                    }
+                } catch (error) {
+                    console.error("Firebase sign-in failed:", error);
+                }
+            };
+            authenticate();
+
+            return () => unsubscribe(); // Cleanup auth listener
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+        }
+    }, []); 
+
+    // 2. REAL-TIME DATA LISTENER (Feedback Data)
+    useEffect(() => {
+        // Guard clause: Do not attempt to query Firestore until authenticated and db/userId are available.
+        if (!isAuthReady || !db || !userId) return;
+
+        console.log("Setting up Firestore listener for feedback data.");
+        
+        // Collection path for public/shared data
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const feedbackCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'feedback_data');
+        
+        const feedbackQuery = query(feedbackCollectionRef); 
+        
+        const unsubscribe = onSnapshot(feedbackQuery, (snapshot) => {
+            const feedbackList = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                timestamp: doc.data().timestamp ? new Date(doc.data().timestamp) : new Date(0)
+            }));
+            
+            // Sort in memory by timestamp descending (most recent first)
+            feedbackList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+            setSavedFeedback(feedbackList);
+            console.log("Fetched new feedback data:", feedbackList.length);
+        }, (error) => {
+            console.error("Firestore real-time listener failed:", error);
+        });
+
+        return () => unsubscribe(); // Cleanup snapshot listener
+    }, [isAuthReady, db, userId]); // Re-run when auth status or db/userId change
+
 
     const generateImage = async (e) => {
         e.preventDefault();
@@ -231,29 +347,50 @@ function TextToImageApp() {
         }
     };
 
-    const submitFeedback = () => {
-        if (feedbackText.trim()) {
-            // Data capture for console (developer analysis)
+    // 3. UPDATED: Save feedback to Firestore
+    const submitFeedback = async () => { 
+        if (!feedbackText.trim()) {
+            setError('Please enter your feedback before submitting.');
+            return;
+        }
+        
+        if (!db || !userId) {
+            setError('System not ready: Firebase database connection or user authentication failed. Please wait a moment.');
+            console.error('Firestore not initialized or userId unavailable.');
+            return;
+        }
+
+        try {
+            // Data to save
             const feedbackData = {
                 quadrant: currentQuadrant,
                 comment: feedbackText.trim(),
                 imagePrompt: prompt,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(), // Use ISO string for consistent storage
+                userId: userId.substring(0, 8) + '...', // Show truncated ID for privacy in UI, but store full ID
             };
+
+            // Public Collection path: /artifacts/{appId}/public/data/feedback_data
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const feedbackCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'feedback_data');
+
+            // Save document
+            await addDoc(feedbackCollectionRef, feedbackData);
             
-            console.log('✅ User Feedback Captured:', feedbackData);
-            
-            // Show confirmation message using the info modal instead of alert()
+            console.log('✅ User Feedback Captured and Saved to Firestore:', feedbackData);
+
+            // Show confirmation message
             setError(null);
-            setShowInfoModal(`Thank you for your feedback on the ${currentQuadrant} quadrant! Feedback has been captured in the console for analysis.`);
+            setShowInfoModal(`Thank you for your feedback on the ${currentQuadrant} quadrant! It has been successfully saved to the shared database.`);
 
             // Reset and close modal
             setFeedbackText('');
             setCurrentQuadrant(null);
             setShowFeedbackModal(false);
-        } else {
-            // Show error message using the info modal instead of alert()
-            setError('Please enter your feedback before submitting.');
+
+        } catch (error) {
+            console.error('Error saving feedback to Firestore:', error);
+            setError(`Failed to save feedback: ${error.message}. Check console for details.`);
         }
     };
 
@@ -291,6 +428,14 @@ function TextToImageApp() {
             }}>
                 ⚡ Image Generator & Analytics ⚡
             </h1>
+            
+            {/* Display Current User ID */}
+            {userId && (
+                <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '12px', color: '#666' }}>
+                    **User ID:** <span style={{ fontWeight: '600', color: primaryColor }}>{userId}</span>
+                </div>
+            )}
+
 
             <form onSubmit={generateImage} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <input
@@ -392,7 +537,7 @@ function TextToImageApp() {
                         <div className="image-quadrant quadrant-br" onClick={() => handleQuadrantClick('Bottom-Right')}></div>
                     </div>
                     
-                    {/* ➡️ NEW: Metrics and Trend Display */}
+                    {/* Metrics and Trend Display */}
                     {(resultMetrics || history.length > 0) && (
                         <div style={{ marginTop: '30px', padding: '15px', border: `1px solid ${accentColor}`, borderRadius: '8px', backgroundColor: '#f9f9f9', textAlign: 'left' }}>
                             <h3 style={{ color: primaryColor, borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '15px' }}>
@@ -415,7 +560,7 @@ function TextToImageApp() {
                             <h4 style={{ color: primaryColor, fontSize: '16px', marginTop: '0' }}>Generation Time Trend (Last {Math.min(history.length, 10)} Runs)</h4>
                             <div style={{ display: 'flex', alignItems: 'flex-end', height: '100px', borderBottom: '1px solid #ccc', paddingBottom: '5px' }}>
                                 {/* Only show the last 10 entries for a clean plot */}
-                                {history.slice(-10).map((item, index) => {
+                                {history.slice(-10).map((item) => {
                                     const maxTime = 30; // Max time for scaling the chart height
                                     const durationNum = parseFloat(item.duration);
                                     const heightPercentage = (durationNum / maxTime) * 100;
@@ -443,7 +588,53 @@ function TextToImageApp() {
                     )}
                 </div>
             )}
+            
+            {/* 4. DATA VIEWER TOGGLE AND DISPLAY */}
+            <div className="data-viewer-container">
+                <button
+                    onClick={() => setShowDataViewer(!showDataViewer)}
+                    style={{
+                        padding: '10px 15px',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        backgroundColor: showDataViewer ? '#dc3545' : accentColor,
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        width: '100%',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                    }}
+                >
+                    {showDataViewer ? 'Hide Captured Feedback' : `View All Captured Feedback (${savedFeedback.length})`}
+                </button>
 
+                {showDataViewer && (
+                    <div style={{ maxHeight: '300px', overflowY: 'auto', marginTop: '15px', paddingRight: '10px' }}>
+                        {savedFeedback.length === 0 ? (
+                            <p style={{ textAlign: 'center', color: '#888' }}>No feedback submitted yet. Be the first!</p>
+                        ) : (
+                            savedFeedback.map((item) => (
+                                <div key={item.id} className="feedback-item">
+                                    <p style={{ margin: '0 0 5px 0', fontSize: '14px', fontWeight: 'bold', color: primaryColor }}>
+                                        Quadrant: {item.quadrant}
+                                    </p>
+                                    <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#333' }}>
+                                        **Prompt:** "{item.imagePrompt.substring(0, 50)}{item.imagePrompt.length > 50 ? '...' : ''}"
+                                    </p>
+                                    <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#555' }}>
+                                        **Comment:** {item.comment}
+                                    </p>
+                                    <p style={{ margin: '5px 0 0 0', fontSize: '10px', color: '#aaa' }}>
+                                        Submitted by User: {item.userId} on {new Date(item.timestamp).toLocaleTimeString()}
+                                    </p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </div>
+            
             {/* Feedback Modal */}
             {showFeedbackModal && (
                 <div className="feedback-modal-overlay">
