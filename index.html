@@ -112,6 +112,11 @@
 
     <!-- 2. System Design -->
     <h2 class="text-2xl">2. System Design </h2>
+	<div class="my-8 space-y-6">
+        <div class="border border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+            <img src="system_design.png" alt="Detailed System Architecture Diagram" class="w-full h-auto rounded-lg">
+            <p class="text-center text-sm mt-2 text-gray-500">Figure 1.1: Overall System Pipeline highlighting key components (Frontend, Inference, Data Loop).</p>
+        </div>
     <p>Our system is engineered as a robust, full-stack application centered around providing a rapid, interactive image generation and refinement experience.</p>
 
     <h3>Key Components</h3>
@@ -136,6 +141,24 @@
         <li><strong>Latency Visualization:</strong> The inclusion of a visible bar chart showing generation time validates our core thesis about efficiency and provides real-time transparency into system performance.</li>
         <li><strong>ML Model Selection:</strong> While our long-term goal is a fully custom, lightweight model, using SDXL 1.0 in the MVP provides a high-quality baseline. This allows us to collect data that can be used to fine-tune a smaller, faster model (e.g., a distilled version) with domain-specific knowledge, aligning with our resource-constrained target users.</li>
     </ul>
+	<!-- System Design and Feedback Loop Diagrams -->
+		<div class="my-8 space-y-6">
+        <div class="border border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+            <img src="demo2.png" alt="Text_to_Image Prompt Interface" class="w-full h-auto rounded-lg">
+            <p class="text-center text-sm mt-2 text-gray-500">Figure 1.2:Text_to_Image Prompt Interface</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="border border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+                <img src="feedback_submission_comment.png" alt="Screenshot of the feedback submission modal" class="w-full h-auto rounded-lg">
+                <p class="text-center text-sm mt-2 text-gray-500">Figure 1.3: Feedback submission interface (modal) where users provide specific critique on an image quadrant.</p>
+            </div>
+            <div class="border border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+                <img src="feedback_viewer.png" alt="Screenshot of the collected feedback data viewer" class="w-full h-auto rounded-lg">
+                <p class="text-center text-sm mt-2 text-gray-500">Figure 1.4: Data viewer illustrating how structured feedback is recorded for model fine-tuning.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- 3. Machine Learning Component -->
     <h2 class="text-2xl">3. Machine Learning Component </h2>
@@ -185,7 +208,11 @@
         </table>
     </div>
     <p>The latency visualization within the application provides immediate performance feedback, validating that the overall system pipeline—including the React component rendering and API call overhead—offers a responsive experience. This confirms our design choice to leverage a highly-optimized third-party inference endpoint for speed.</p>
-
+    <!-- Performance Analysis Chart -->
+    <div class="my-8">
+        <img src="performance_analysis.png" alt="Chart showing performance analysis and latency metrics for image generation" class="w-full h-auto rounded-xl shadow-xl border border-indigo-200">
+        <p class="text-center text-sm mt-2 text-gray-500">Figure 3: Visualization of system latency for various prompt complexities, validating efficiency goals.</p>
+    </div>
     <h3>Limitations and Subjective Evaluation</h3>
     <p>The main limitations center on the MVP's reliance on the third-party API and the general constraints of foundational models:</p>
     <ul class="list-disc ml-6">
@@ -200,7 +227,29 @@
     <!-- 5. Application Demonstration -->
     <h2 class="text-2xl">5. Application Demonstration </h2>
     <p>The application provides a clean, intuitive interface designed for rapid iteration.</p>
-
+    <!-- Application Demonstration Screenshots -->
+    <div class="my-8 space-y-6">
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="border border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+                <img src="demo1.png" alt="Main application view with input prompt and generated images" class="w-full h-auto rounded-lg">
+                <p class="text-center text-sm mt-2 text-gray-500">Figure 4.1: Initial view of the generator interface (Prompt and Generation Grid).</p>
+            </div>
+            <div class="border border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+                <img src="generate.png" alt="Close-up of the generate button and input area" class="w-full h-auto rounded-lg">
+                <p class="text-center text-sm mt-2 text-gray-500">Figure 4.2: Focus on the input/command area.</p>
+            </div>
+            <div class="border md:col-span-2 grid md:grid-cols-2 gap-6 border-indigo-200 rounded-xl shadow-xl p-4 bg-white">
+                <div>
+                    <img src="feedback1.png" alt="Screenshot showing the feedback button on an image quadrant" class="w-full h-auto rounded-lg">
+                    <p class="text-center text-sm mt-2 text-gray-500">Figure 4.3: User interaction: triggering the feedback mechanism on a selected quadrant.</p>
+                </div>
+                <div>
+                    <img src="feedback2.png" alt="Screenshot showing the final feedback confirmation" class="w-full h-auto rounded-lg">
+                    <p class="text-center text-sm mt-2 text-gray-500">Figure 4.4: Confirmation of feedback submission, completing the data loop.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <h3>Core Feature Set</h3>
     <ol class="list-decimal ml-6">
@@ -268,18 +317,13 @@
     <h2 class="text-2xl">8. References </h2>
     <ol class="list-decimal ml-6">
         <li><strong>Text-to-Image Generation Model:</strong>
-            <p>Rombach, R., et al. (2022). High-Resolution Image Synthesis with Latent Diffusion Models. <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>.</p>
+            <p>Rombach, R., et al. (2022). High-Resolution Image Synthesis with Latent Diffusion Models. <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>. Available at: <a href="https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf" class="text-indigo-600 hover:text-indigo-800 underline" target="_blank">https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf</a></p>
         </li>
         <li><strong>Inference Platform:</strong>
-            <p>Hugging Face Inference API Documentation, <em>The Hugging Face, Inc.</em></p>
+            <p>Hugging Face Inference API Documentation, <em>The Hugging Face, Inc.</em> Available at: <a href="https://huggingface.co/" class="text-indigo-600 hover:text-indigo-800 underline" target="_blank">https://huggingface.co/</a></p>
         </li>
         <li><strong>Related Work & Inspirations:</strong>
-            <p>OpenAI. (2023). DALL-E 3. [Link to DALL-E 3 blog post or related paper].</p>
-            <p>(Placeholder for any specific tutorials, libraries, or academic papers used in the project's development or conceptualization).</p>
-        </li>
-        <li><strong>UX/Frontend Frameworks:</strong>
-            <p>React Documentation. <em>Meta Platforms, Inc.</em></p>
-            <p>Tailwind CSS Documentation. <em>Tailwind Labs, Inc.</em></p>
+            <p>OpenAI. (2023). DALL-E 3. [Link to DALL-E 3 blog post or related paper]. Available at: <a href="https://cookbook.openai.com/articles/what_is_new_with_dalle_3" class="text-indigo-600 hover:text-indigo-800 underline" target="_blank">https://cookbook.openai.com/articles/what_is_new_with_dalle_3</a></p>
         </li>
     </ol>
 
